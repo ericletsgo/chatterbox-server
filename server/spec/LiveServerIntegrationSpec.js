@@ -72,6 +72,28 @@ describe('server', function() {
       done();
     });
   });
-
-
+  
+  it('Should be able to handle OPTIONS request', function(done) {
+    var requestParams = {method: 'OPTIONS',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+    };
+    request(requestParams, function(error, response, body) {
+      expect(Object.keys(response.headers)).to.contain('access-control-allow-methods');
+      expect(Object.keys(response.headers)).to.contain('access-control-allow-origin');
+      expect(Object.keys(response.headers)).to.contain('access-control-allow-headers');
+      expect(Object.keys(response.headers)).to.contain('connection');
+      expect(Object.keys(response.headers)).to.contain('access-control-max-age');
+      done();
+    });
+  });
+  
+  it('Should be able to handle OPTIONS request', function(done) {
+    var requestParams = {method: 'OPTIONS',
+      uri: 'http://127.0.0.1:3000/classes/messages',
+    };
+    request(requestParams, function(error, response, body) {
+      expect(response.statusCode).to.equal(200);
+      done();
+    });
+  });
 });

@@ -155,4 +155,13 @@ describe('Node Server Request Listener Function', function() {
     expect(messages[3].username).to.equal('Eric');
     expect(messages[3].text).to.equal('This is the second post!');
   });
+  
+  it('Should return header for GET request', function() {
+    var req = new stubs.request('/classes/messages', 'GET');
+    var res = new stubs.response();
+    
+    handler.requestHandler(req, res);
+    
+    expect(res._headers).to.exist;
+  });
 });
