@@ -11,7 +11,7 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-var messages = {results: [{username: 'My mom', text: 'You found me!'}]};
+var messages = {results: []};
 
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
@@ -36,7 +36,7 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  request.setEncoding('utf8');
+  // request.setEncoding('utf8');
   
   
   // The outgoing status.
@@ -66,10 +66,8 @@ var requestHandler = function(request, response) {
   } else if (request.method === 'POST') {
     request.on('data', (chunk) => {
       messages.results.push(JSON.parse(chunk));
-      console.log(messages);
     }).on('end', () => {
       response.writeHead(201, headers);
-      console.log(JSON.parse(JSON.stringify(messages)).results[0].username);
       response.end(JSON.stringify(messages));
     });
   } else if (request.method === 'GET') {

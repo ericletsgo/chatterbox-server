@@ -115,5 +115,44 @@ describe('Node Server Request Listener Function', function() {
         expect(res._responseCode).to.equal(404);
       });
   });
-
+  
+  it('Should be able to handle OPTIONS request', function() {
+    var req = new stubs.request('/classes/messages', 'OPTIONS');
+    var res = new stubs.response();
+    
+    handler.requestHandler(req, res);
+    // Object.keys(res._headers)
+    expect(Object.keys(res._headers)).to.contain('access-control-allow-methods');
+    expect(Object.keys(res._headers)).to.contain('access-control-allow-origin');
+    expect(Object.keys(res._headers)).to.contain('access-control-allow-headers');
+    expect(Object.keys(res._headers)).to.contain('connection');
+    expect(Object.keys(res._headers)).to.contain('access-control-max-age');
+  });
+  
+  it('Should return POST requests in the order they were sent', function() {
+    var stubMsg1 = {
+      username: 'Jesse',
+      text: 'This is the first post!'
+    };
+    
+    var stubMsg2 = {
+      username: 'Eric',
+      text: 'This is the second post!'
+    };
+    
+    var req1 = new stubs.request('/classes/messages', 'POST', stubMsg1);
+    var res1 = new stubs.response();
+    
+    var req2 = new stubs.request('/classes/messages', 'POST', stubMsg2);
+    var res2 = new stubs.response();
+    
+    handler.requestHandler(req1, res1);
+    handler.requestHandler(req2, res2);
+    
+    var messages = JSON.parse(res2._data).results;
+    expect(messages[2].username).to.equal('Jesse');
+    expect(messages[2].text).to.equal('This is the first post!');
+    expect(messages[3].username).to.equal('Eric');
+    expect(messages[3].text).to.equal('This is the second post!');
+  });
 });
