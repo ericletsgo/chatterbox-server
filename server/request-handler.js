@@ -11,7 +11,7 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
-var messages = {results: []};
+var messages = {results: [{username: 'My mom', text: 'You found me!'}]};
 
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
@@ -35,9 +35,7 @@ var requestHandler = function(request, response) {
   // Adding more logging to your server can be an easy way to get passive
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
-  
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  var statusCode = 200;
   request.setEncoding('utf8');
   
   
@@ -63,21 +61,29 @@ var requestHandler = function(request, response) {
   // up in the browser.
   //
   if (request.url !== '/classes/messages') {
-    response.statusCode = 404;
+    response.writeHead(404, headers);
     response.end();
   } else if (request.method === 'POST') {
     request.on('data', (chunk) => {
       messages.results.push(JSON.parse(chunk));
       console.log(messages);
     }).on('end', () => {
-      response.statusCode = 201;
+      response.writeHead(201, headers);
       console.log(JSON.parse(JSON.stringify(messages)).results[0].username);
       response.end(JSON.stringify(messages));
     });
-    // .on('end', () => temp = JSON.stringify(Buffer.concat(temp)));
-    // console.log(temp);
-  } else {
+  } else if (request.method === 'GET') {
+    response.writeHead(200, headers);
     response.end(JSON.stringify(messages));  
+  } else if (request.method === 'OPTIONS') {
+    response.writeHead(200, {
+      'connection': 'keep-alive',
+      'access-control-allow-origin': '*',
+      'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
+      'access-control-allow-headers': 'content-type, accept',
+      'access-control-max-age': 86400 // Seconds.
+    });
+    response.end();
   }
   // Calling .end "flushes" the response's internal buffer, forcing
   // node to actually send all the data over to the client.
@@ -94,4 +100,4 @@ var requestHandler = function(request, response) {
 // client from this domain by setting up static file serving.
 
 
-module.exports = requestHandler;
+module.exports.requestHandler = requestHandler;
