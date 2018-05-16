@@ -11,6 +11,8 @@ this file and include it in basic-server.js so that it actually works.
 *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html.
 
 **************************************************************/
+var fs = require('fs');
+var url = require('url');
 var messages = {results: []};
 
 var defaultCorsHeaders = {
@@ -36,7 +38,7 @@ var requestHandler = function(request, response) {
   // debugging help, but you should always be careful about leaving stray
   // console.logs in your code.
   console.log('Serving request type ' + request.method + ' for url ' + request.url);
-  // request.setEncoding('utf8');
+  request.setEncoding('utf8');
   
   
   // The outgoing status.
@@ -60,12 +62,39 @@ var requestHandler = function(request, response) {
   // response.end() will be the body of the response - i.e. what shows
   // up in the browser.
   //
-  if (request.url !== '/classes/messages') {
+  var routes = {
+    '/scripts/app.js': true,
+    '/bower_components/jquery/dist/jquery.js': true,
+    '/images/spiffygif_46x46.gif': true
+  };
+  
+  if (request.url === '/styles/styles.css') {
+    fs.readFile('./client/styles/styles.css', 'utf8', (err, data) => {
+      headers['Content-Type'] = 'text/css';
+      response.writeHead(200, headers);
+      response.end(data);
+    });
+  } else if (request.url === '/') {
+    fs.readFile('./client/index.html', 'utf8', (err, data) => {
+      headers['Content-Type'] = 'text/html';
+      response.writeHead(200, headers);
+      response.end(data);
+    });
+  } else if (routes[request.url]) {
+    fs.readFile('./client' + request.url, 'utf8', (err, data) => {
+      headers['Content-Type'] = 'application/json';
+      response.writeHead(200, headers);
+      response.end(data);
+    });
+  } else if (request.url !== '/classes/messages') {
     response.writeHead(404, headers);
     response.end();
   } else if (request.method === 'POST') {
     request.on('data', (chunk) => {
       messages.results.push(JSON.parse(chunk));
+      fs.appendFile('./server/messages.txt', '\n' + chunk, (err, data) => {
+        if (err) { throw err; }
+      });
     }).on('end', () => {
       response.writeHead(201, headers);
       response.end(JSON.stringify(messages));
@@ -74,13 +103,9 @@ var requestHandler = function(request, response) {
     response.writeHead(200, headers);
     response.end(JSON.stringify(messages));  
   } else if (request.method === 'OPTIONS') {
-    response.writeHead(200, {
-      'connection': 'keep-alive',
-      'access-control-allow-origin': '*',
-      'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
-      'access-control-allow-headers': 'content-type, accept',
-      'access-control-max-age': 86400 // Seconds.
-    });
+    headers['connection'] = 'keep-alive';
+    headers['access-control-max-age'] = 86400;
+    response.writeHead(200, headers);
     response.end();
   }
   // Calling .end "flushes" the response's internal buffer, forcing
